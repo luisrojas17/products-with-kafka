@@ -16,3 +16,11 @@ This is only for testing purposes to show how handle exceptions to retry events 
 It is a library which contains the domain model events used by Products Microservice and Email Notification Microservice.
 
 All of these examples are based on the course "Apache Kafka for Event-Driven Microservices" by [Udemy](https://www.udemy.com/).
+
+## How to Run Test Classes
+
+### To run test class
+mvn test -Dtest=ProductsServiceIntegrationTest
+
+### To run test method
+mvn test -Dtest=ProductsServiceIntegrationTest#testCreateProduct_whenGivenValidProductDetails_successfullySendsKafkaMessage

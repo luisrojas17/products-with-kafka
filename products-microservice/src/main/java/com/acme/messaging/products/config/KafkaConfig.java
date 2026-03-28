@@ -70,7 +70,12 @@ public class KafkaConfig {
 	KafkaTemplate<String, ProductCreatedEvent> kafkaTemplate() {
 		return new KafkaTemplate<String, ProductCreatedEvent>(producerFactory());
 	}
-	
+
+	/**
+	 * This bean is used to create the topic in the Kafka cluster if the topic does not exist.
+	 *
+	 * @return a bean for the topic created.
+	 */
 	@Bean
 	NewTopic createTopic() {
 		return TopicBuilder.name("product-created-events-topic")

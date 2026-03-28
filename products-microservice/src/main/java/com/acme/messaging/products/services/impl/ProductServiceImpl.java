@@ -40,6 +40,8 @@ public class ProductServiceImpl implements ProductService {
 				"product-created-events-topic",
 				productId,
 				productCreatedEvent);
+		// It is added a header to the record in order to avoid duplicates processing records for producer
+		// This characteristic is related to idempotency
 		record.headers().add("messageId", UUID.randomUUID().toString().getBytes());
 		
 		SendResult<String, ProductCreatedEvent> result = 
