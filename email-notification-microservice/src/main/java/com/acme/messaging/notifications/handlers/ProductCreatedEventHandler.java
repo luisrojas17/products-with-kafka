@@ -25,7 +25,7 @@ import com.acme.messaging.notifications.repositories.ProcessedEventRepository;
 import java.util.Objects;
 
 /**
- * This class is a Kafka Consumer which consumes all the events stored into product-created-events-topic.
+ * This class is a Kafka Consumer which consumes each event stored into product-created-events-topic.
  */
 @Slf4j
 @Component
@@ -40,6 +40,24 @@ public class ProductCreatedEventHandler {
 		this.processedEventRepository = processedEventRepository;
 	}
 
+	/**
+	 * This method consumes is subscribing to product-created-events-topic and consumes each message
+	 * in the topic. Once the consumer gets the message are executed next tasks:
+	 * <ul>
+	 *     <li>Validate in database if the message exist. If so, the task finish since means that
+	 *     the message was processed successfully before.</li>
+	 *     <li>Consumes a remote service synchronously.</li>
+	 *     <li>The message is stored into database.</li>
+	 * </ul>
+	 *
+	 *  If the method throws an exception, Kafka transaction rolls back and the consumer offset is not committed.
+	 *
+	 * @param productCreatedEvent an instance of ProductCreatedEvent which is mapped from Kafka Topic to Java instance.
+	 *                            It is the message produced by Kafka Producer.
+	 * @param messageId It is the message id which represents the product created by Kafka Producer.
+	 * @param messageKey It is the message key which determine if the message goes to the same partition or the partition
+	 *                   will be selected by random mode according to assign partitions mechanisms.
+	 */
 	@Transactional
 	@KafkaHandler
 	public void handle(@Payload ProductCreatedEvent productCreatedEvent, @Header("messageId") String messageId,
@@ -52,10 +70,12 @@ public class ProductCreatedEventHandler {
 		ProcessedEventEntity existingRecord = processedEventRepository.findByMessageId(messageId);
 		
 		if(Objects.nonNull(existingRecord)) {
-			log.info("Found a duplicate message id: {}", existingRecord.getMessageId());
+			log.warn("Found a duplicate message id: {}", existingRecord.getMessageId());
 
 			return;
 		}
+
+		log.info("Message id: {} was not processed before. So, it will be processed now.", messageId);
 
 		// To simulate a remote service.
 		String requestUrl = "http://localhost:8082/response/200";
@@ -64,7 +84,7 @@ public class ProductCreatedEventHandler {
 			ResponseEntity<String> response = restTemplate.exchange(requestUrl, HttpMethod.GET, null, String.class);
 
 			if (response.getStatusCode().value() == HttpStatus.OK.value()) {
-				log.info("Received response from a remote service: {}", response.getBody());
+				log.info("Received response: {} from a remote service: {}", response.getBody(), requestUrl);
 			}
 		} catch (ResourceAccessException ex) {
 			log.error(ex.getMessage());
