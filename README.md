@@ -45,7 +45,7 @@ Or you can use Docker image to create a container. To do this, you can use some 
 ### To run the docker-compose
 ```bash
 cd docker/
-docker-compose -f docker-compose-4.yml up
+docker compose -f docker-compose-4.yml up
 ```
 
 ## How to Run Test Classes
